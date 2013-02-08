@@ -1,0 +1,62 @@
+autopilot-gtk (0.4daily13.02.08-0ubuntu1) raring; urgency=low
+
+  [ Mathieu Trudel-Lapierre ]
+  * Automatic snapshot from revision 1 (bootstrap).
+  * debian/control:
+    - Bump Build-Depends on debhelper to 9.
+    - Update style: use trailing commas at the end of dep lists.
+    - Update Vcs-Bzr, Vcs-Browser and add a notice to uploaders.
+    - Adjust short, long descriptions for libautopilot-gtk packages.
+    - Add Pre-Depends:; Multi-Arch: for libautopilot-gtk0 for multiarch.
+  * debian/compat: bump to compat level 9.
+  * debian/rules:
+    - Override dh_install to remove *.la/*.a files and fail the build if there
+      are files not being installed or missing from the build.
+    - Override dh_makeshlibs to strictly check symbols.
+  * debian/source/format: migrate back to source format 1.0.
+  * debian/copyright: update format line.
+  * debian/*.install: update paths for multiarch.
+
+  [ Allan LeSage ]
+  * debian/control:
+    - Replace, Conflict, and Provide autopilot-gtk and libautopilot-gtk0.
+    - Replace and Conflict libautopilot-gtk-dev.
+    - Update Standards-Version to 3.9.4.
+    - Remove '0' from libautopilot-gtk package.
+    - Remove libautopilot-gtk-dev package, no longer needed.
+    - Remove libindicate-dev from Build-Depends.
+  * debian/libautopilot-gtk-dev.install: remove, no longer needed.
+  * debian/libautopilot-gtk.install: remove, one-package install.
+  * lib/CMakeLists.txt:
+    - Remove SOVERSION.
+    - Rename from autopilot-gtk to autopilot.
+    - Install directly to gtk-3.0/modules.
+    - Remove pc file to simplify.
+    - Remove headers.
+  * lib/autopilot-gtk.pc.in: remove to simplify.
+
+  [ allanlesage@gmail.com, Allan LeSage ]
+  * Hang in eog if no log_handler defined (?) (LP: #1111746)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 24
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 08 Feb 2013 16:34:17 +0000
+
+autopilot-gtk (0.3-0ubuntu1) quantal; urgency=low
+
+  * Fixed segfault on non-static name over gnome-calculator.
+
+ -- Allan LeSage <allan.lesage@canonical.com>  Fri, 19 Oct 2012 10:23:49 -0500
+
+autopilot-gtk (0.2-0ubuntu1) quantal; urgency=low
+
+  * Corrected packaging.
+
+ -- Allan LeSage <allan.lesage@canonical.com>  Thu, 18 Oct 2012 16:10:27 -0500
+
+autopilot-gtk (0.1-0ubuntu1) quantal; urgency=low
+
+  * Initial release
+
+ -- Allan LeSage <allan.lesage@canonical.com>  Wed, 15 Aug 2012 15:45:52 -0500
