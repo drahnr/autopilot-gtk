@@ -25,38 +25,6 @@
 #include <glib-object.h>
 #include <map>
 
-namespace glib
-{
-
-class Variant;
-typedef std::map<std::string, Variant> HintsMap;
-
-struct StealRef {};
-
-class Variant
-{
-public:
-  Variant();
-  Variant(GVariant*);
-  Variant(GVariant*, StealRef const&);
-
-  Variant(Variant const&);
-  ~Variant();
-
-  std::string GetString() const;
-  int GetInt() const;
-  unsigned GetUInt() const;
-  bool GetBool() const;
-
-  bool ASVToHints(HintsMap& hints) const;
-
-  Variant& operator=(GVariant*);
-  operator GVariant*() const;
-private:
-  GVariant* variant_;
-};
-
-}
 
 namespace variant
 {
