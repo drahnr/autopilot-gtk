@@ -1,3 +1,9 @@
+autopilot-gtk (0.4daily13.02.14-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 26
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Thu, 14 Feb 2013 00:01:51 +0000
+
 autopilot-gtk (0.4daily13.02.08-0ubuntu1) raring; urgency=low
 
   [ Mathieu Trudel-Lapierre ]
