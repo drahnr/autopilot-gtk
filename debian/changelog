@@ -1,3 +1,14 @@
+autopilot-gtk (0.4daily13.02.22-0ubuntu1) raring; urgency=low
+
+  [ Thomi Richards ]
+  * Need a log message to verify that the plugin loaded OK. (LP:
+    #1130861)
+
+  [ Automatic PS uploader ]
+  * Automatic snapshot from revision 28
+
+ -- Automatic PS uploader <ps-jenkins@lists.canonical.com>  Fri, 22 Feb 2013 00:01:29 +0000
+
 autopilot-gtk (0.4daily13.02.14-0ubuntu1) raring; urgency=low
 
   * Automatic snapshot from revision 26
