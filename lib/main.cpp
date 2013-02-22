@@ -19,32 +19,100 @@
 
 #include <glib.h>
 #include <gdk/gdk.h>
+#include <string.h>
+#include <fstream>
+#include <iostream>
 
 #include "main.h"
 #include "Introspection.h"
 #include "IntrospectionService.h"
 
+namespace
+{
+  std::string filename;
+  GLogLevelFlags levels_to_log;
+
+  std::ostream& get_log_stream()
+  {
+    if (!filename.empty())
+    {
+      static std::ofstream fstream(filename);
+      return fstream;
+    }
+    else
+    {
+      return std::cout;
+    }
+  }
+
+  std::string get_level_name(GLogLevelFlags lvl)
+  {
+    switch(lvl)
+    {
+      case G_LOG_LEVEL_DEBUG:
+      return "DEBUG";
+      case G_LOG_LEVEL_INFO:
+      return "INFO";
+      case G_LOG_LEVEL_MESSAGE:
+      return "MESSAGE";
+      case G_LOG_LEVEL_WARNING:
+      return "WARNING";
+      case G_LOG_LEVEL_CRITICAL:
+      return "CRITICAL";
+      case G_LOG_LEVEL_ERROR:
+      return "ERROR";
+      default:
+      return "UNKNOWN";
+    }
+  }
+}
 AutopilotIntrospection* autopilot_introspection = NULL;
 
-void LogToFile (const gchar* log_domain,
+void LogHandler (const gchar* log_domain,
                 GLogLevelFlags log_level,
                 const gchar* message,
                 gpointer user_data)
 {
-  FILE* logfile = fopen ("autopilot-gtk.log", "a");
-  if (logfile == NULL) {
-    //g_warning("rerouting logger to console");
-    return;
+  if (log_level & levels_to_log)
+  {
+    std::string domain = log_domain ? log_domain : "default";
+    get_log_stream() << "[" << domain << "] " << get_level_name(log_level) << ": " << message << std::endl;
   }
-  fprintf (logfile, "%s\n", message);
-  fclose (logfile);
+}
+
+void initialise_logging()
+{
+  if (getenv("AP_GTK_LOG_VERBOSE"))
+  {
+    levels_to_log = (GLogLevelFlags) (
+      G_LOG_LEVEL_MASK |
+      G_LOG_FLAG_FATAL |
+      G_LOG_FLAG_RECURSION);
+  }
+  else
+  {
+    levels_to_log = (GLogLevelFlags)(
+      G_LOG_LEVEL_WARNING |
+      G_LOG_LEVEL_ERROR |
+      G_LOG_LEVEL_CRITICAL |
+      G_LOG_FLAG_FATAL |
+      G_LOG_FLAG_RECURSION);
+  }
+  char* fname = getenv("AP_GTK_LOG_FILE");
+  if (fname && strcmp(fname, "") != 0)
+  {
+    filename = fname;
+  }
+
+  g_log_set_default_handler(LogHandler, NULL);
 }
 
 int gtk_module_init(gint argc, char *argv[]) {
-  //g_log_set_handler (NULL, G_LOG_LEVEL_MASK, LogToFile, NULL);
-  //g_log_set_handler ("GLib", G_LOG_LEVEL_MASK, LogToFile, NULL);
+  initialise_logging();
   autopilot_introspection = autopilot_introspection_skeleton_new ();
   g_bus_get (G_BUS_TYPE_SESSION, NULL, bus_acquired, NULL);
+  // always log this:
+  std::cout << "Autopilot GTK interface loaded." << std::endl;
   return 0;
 }
 
