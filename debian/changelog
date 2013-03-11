@@ -1,3 +1,13 @@
+autopilot-gtk (0.4daily13.03.11-0ubuntu1) raring; urgency=low
+
+  [ Thomi Richards ]
+  * Rebuild against libxpathselect1.2
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 31
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 11 Mar 2013 11:31:34 +0000
+
 autopilot-gtk (0.4daily13.02.22-0ubuntu1) raring; urgency=low
 
   [ Thomi Richards ]
