@@ -25,16 +25,19 @@
 #include <xpathselect/node.h>
 #include <xpathselect/xpathselect.h>
 #include <string>
+#include "Variant.h"
 
 class GtkNode: public xpathselect::Node {
 public:
   typedef std::shared_ptr<GtkNode> Ptr;
 
-  GtkNode(GObject* object);
+  GtkNode(GObject* object, std::string const& parent_name);
+  virtual ~GtkNode();
 
   virtual GVariant* Introspect() const;
 
   virtual std::string GetName() const;
+  virtual std::string GetPath() const;
   virtual bool MatchProperty(const std::string& name,
                              const std::string& value) const;
   virtual xpathselect::NodeList Children() const;
@@ -43,11 +46,14 @@ public:
 
 private:
   GObject *object_;
+  std::string full_path_;
 
   virtual GVariant* GetChildNodeNames() const;
   virtual intptr_t GetObjectId() const;
   virtual void GetGlobalRect(GdkRectangle* rect) const;
   virtual GVariant* ComposeRectVariant(gint x, gint y, gint height, gint width) const;
+  void AddAtkComponentProperties(variant::BuilderWrapper &builder_wrapper,
+                                 AtkComponent *atk_component) const;
 };
 
 #endif // GTKNODE_H

@@ -34,6 +34,8 @@ gboolean handle_get_state (AutopilotIntrospection* introspection_service,
                            GDBusMethodInvocation* invocation,
                            const gchar * arg,
                            gpointer user_data);
+gboolean handle_get_version (AutopilotIntrospection *introspection_service,
+                             GDBusMethodInvocation *invocation);
 GVariant* Introspect(std::string const& query_string);
 std::list<GtkNode::Ptr> GetNodesThatMatchQuery(std::string const& query_string);
 

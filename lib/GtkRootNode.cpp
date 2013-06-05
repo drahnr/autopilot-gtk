@@ -27,7 +27,7 @@
 #include "Variant.h"
 
 GtkRootNode::GtkRootNode()
-  : GtkNode(NULL) {
+  : GtkNode(NULL, std::string()) {
 }
 
 GVariant* GtkRootNode::Introspect() const {
@@ -50,6 +50,10 @@ std::string GtkRootNode::GetName() const {
   return "Root";
 }
 
+std::string GtkRootNode::GetPath() const {
+  return "/" + GetName();
+}
+
 bool GtkRootNode::MatchProperty(const std::string& name,
                                 const std::string& value) const {
   //g_debug("matching a property for the root node");
@@ -68,7 +72,12 @@ xpathselect::NodeList GtkRootNode::Children() const {
   GList* elem;
   for (elem = toplevels_list; elem; elem = elem->next) {
     GObject *node = reinterpret_cast<GObject*>(elem->data);
-    children.push_back(std::make_shared<GtkNode>(node));
+    children.push_back(std::make_shared<GtkNode>(node, GetPath()));
+
+    // if the AtkObjects are available, expose the Atk hierarchy as well
+    AtkObject *atk_object = gtk_widget_get_accessible(GTK_WIDGET(node));
+    if (atk_object != NULL)
+        children.push_back(std::make_shared<GtkNode>(G_OBJECT(atk_object), GetPath()));
   }
   g_list_free(toplevels_list);
   return children;

@@ -56,6 +56,10 @@ void bus_acquired (GObject *object,
                     "handle-get-state",
                     G_CALLBACK(handle_get_state),
                     NULL);
+  g_signal_connect (autopilot_introspection,
+                    "handle-get-version",
+                    G_CALLBACK(handle_get_version),
+                    NULL);
   g_object_unref (bus);
 }
 
@@ -73,6 +77,15 @@ gboolean handle_get_state (AutopilotIntrospection* introspection_service,
   return TRUE;
 }
 
+gboolean handle_get_version (AutopilotIntrospection *introspection_service,
+                             GDBusMethodInvocation *invocation)
+{
+    autopilot_introspection_complete_get_version(introspection_service,
+                                                 invocation,
+                                                 "1.3");
+    return TRUE;
+}
+
 GVariant* Introspect(std::string const& query_string) {
   //g_debug("introspecting our current GTK+ context");
 
@@ -80,9 +93,9 @@ GVariant* Introspect(std::string const& query_string) {
   std::list<GtkNode::Ptr> node_list = GetNodesThatMatchQuery(query_string);
 
   for (auto node: node_list) {
-    std::string object_name = node->GetName();
-    g_variant_builder_add(builder, "(sv)", object_name.c_str(), node->Introspect());
-    //g_debug("dumped object '%s'", object_name.c_str());
+    std::string object_path = node->GetPath();
+    g_variant_builder_add(builder, "(sv)", object_path.c_str(), node->Introspect());
+    //g_debug("dumped object '%s'", object_path.c_str());
   }
 
   GVariant* state = g_variant_new("a(sv)", builder);

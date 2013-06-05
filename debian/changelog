@@ -1,3 +1,103 @@
+autopilot-gtk (1.3daily13.06.05-0ubuntu1) saucy; urgency=low
+
+  [ Alberto Mardegan ]
+  * Export the ATK objects hierarchy as well AtkObject interfaces are
+    meant for accessibility, and expose more information which can be
+    useful for automated testing. For instance, it is possible to
+    enumerate and introspect all the cells in a GtkTreeView. This patch
+    exposes the ATK objects hierarchies as children of the root node;
+    the existing GtkWidget hierarchy is left untouched, and can still be
+    used. . (LP: #1160827)
+
+  [ Thomi Richards ]
+  * fix property searching. (LP: #1175738)
+  * Fix crashing bug. (LP: #1177161)
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ Christopher Lee ]
+  * Add GetVersion to the DBus introspection.
+
+  [ David Barth ]
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ Allan LeSage ]
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 42
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 05 Jun 2013 07:08:46 +0000
+
+autopilot-gtk (1.3daily13.05.24ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Thomi Richards ]
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ Allan LeSage ]
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ David Barth ]
+  * This change fixes an issue with queries that look for gtk windows
+    matching a particular property value. A set of 2 tests has been
+    added to verify the queries that were otherwise failing with a void
+    return set.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 41 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 24 May 2013 00:01:41 +0000
+
+autopilot-gtk (1.3daily13.05.09ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  * Automatic snapshot from revision 39 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 09 May 2013 00:00:58 +0000
+
+autopilot-gtk (1.3daily13.05.08ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Thomi Richards ]
+  * Autopilot-gtk crashes when a query returns no results. (LP:
+    #1177161)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 37 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 08 May 2013 00:00:58 +0000
+
+autopilot-gtk (1.3daily13.05.03ubuntu.unity.next-0ubuntu1) raring; urgency=low
+
+  [ Christopher Lee ]
+  * Bump version number
+
+  [ Thomi Richards ]
+  * property matching is broken (LP: #1175738)
+
+  [ Christopher Lee <chris.lee@canonical.com>, Thomi Richards ]
+  * DBus wire protocol changes required (LP: #1155351)
+
+  [ Alberto Mardegan ]
+  * GtkTreeView's contents cannot be introspected (LP: #1160827)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 35 (ubuntu-unity/next)
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 03 May 2013 00:00:55 +0000
+
 autopilot-gtk (0.4daily13.03.11-0ubuntu1) raring; urgency=low
 
   [ Thomi Richards ]
