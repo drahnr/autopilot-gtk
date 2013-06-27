@@ -114,6 +114,7 @@ void GtkNode::AddAtkComponentProperties(variant::BuilderWrapper &builder_wrapper
   builder_wrapper.add("visible", visible);
   if (visible) {
     gint x, y, width, height;
+    x = y = width = height = -1;
     atk_component_get_extents(atk_component, &x, &y, &width, &height,
                               ATK_XY_SCREEN);
     GVariant *rect_gvariant = ComposeRectVariant(x, y, width, height);

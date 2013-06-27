@@ -6,8 +6,14 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 %:
 	dh $@ 
 
+override_dh_auto_test:
+	mkdir -p debian/tmp/home/run
+	env HOME=$(CURDIR)/debian/tmp/home XDG_RUNTIME_DIR=$(CURDIR)/debian/tmp/home/run \
+		xvfb-run dh_auto_test
+
 override_dh_install:
 	dh_install --fail-missing
 
 override_dh_makeshlibs:
 	dh_makeshlibs -V
+

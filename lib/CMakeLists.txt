@@ -31,5 +31,7 @@ target_link_libraries(autopilot
   ${GTK_LIBRARIES}
   ${XPATHSELECT_LIBRARIES})
 
+execute_process(COMMAND ln -s . lib/modules)
+
 install(TARGETS autopilot
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/gtk-3.0/modules)

@@ -1,3 +1,19 @@
+autopilot-gtk (1.3+13.10.20130627-0ubuntu1) saucy; urgency=low
+
+  [ Martin Pitt ]
+  * Add make test/ctest integration, and run tests during package build.
+  * Add integration test suite (LP: #1083612). (LP: #1083612)
+
+  [ Alberto Mardegan ]
+  * Initialize rect fields to -1 This makes the globalRect variable
+    return negative values (for some reason, not -1 but -2147483648)
+    when the rectangle is offscreen. (LP: #1176234)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 46
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 27 Jun 2013 00:01:15 +0000
+
 autopilot-gtk (1.3daily13.06.05-0ubuntu1) saucy; urgency=low
 
   [ Alberto Mardegan ]
