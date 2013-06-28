@@ -10,8 +10,29 @@
     <property name="authors">Martin Pitt</property>
     <property name="license_type">gpl-3-0</property>
   </object>
+  <object class="GtkWindow" id="window_textview">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">TextView Demo</property>
+    <child>
+      <object class="GtkScrolledWindow" id="scrolledwindow1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkTextView" id="textview_demo">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="buffer">textbuffer_demo</property>
+          </object>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkTextBuffer" id="textbuffer_demo">
+    <property name="text">This is a test application.</property>
+  </object>
   <object class="GtkWindow" id="window_app">
     <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Hello Color</property>
     <signal name="destroy" handler="on_quit" swapped="no"/>
     <child>
       <object class="GtkBox" id="box1">

@@ -31,6 +31,20 @@ class PropertyTest(AutopilotTestCase):
         super(PropertyTest, self).setUp()
         self.app = self.launch_test_application(test_app, app_type='gtk')
 
+    def test_gtk_builder_name(self):
+        """GtkBuilder name lookup"""
+
+        w = self.app.select_single(BuilderName='button_greet')
+        self.assertNotEqual(w, None)
+        self.assertEqual(w.label, 'Greet')
+
+        w = self.app.select_single(BuilderName='button_quit')
+        self.assertNotEqual(w, None)
+        self.assertEqual(w.label, 'gtk-quit')
+
+        w = self.app.select_single(BuilderName='entry_color')
+        self.assertNotEqual(w, None)
+
     def test_button(self):
         """GtkButton properties"""
 
@@ -53,18 +67,15 @@ class PropertyTest(AutopilotTestCase):
         self.assertEqual(len(btn_greet.globalRect), 4)
         self.assertEqual(len(btn_quit.globalRect), 4)
 
+        # all our buttons have a GtkBuilder ID
+        self.assertEqual(btn_greet.BuilderName, 'button_greet')
+        self.assertEqual(btn_quit.BuilderName, 'button_quit')
+
     def test_entry(self):
         """GtkEntry properties"""
 
-        entries = self.app.select_many('GtkEntry')
-        self.assertEqual(len(entries), 2)
-        # the upper entry is for the name, the lower for the color
-        # FIXME: once we have proper names (LP# 1082391), replace this with an
-        # assertion
-        if entries[0].globalRect[1] < entries[1].globalRect[1]:
-            (entry_name, entry_color) = entries
-        else:
-            (entry_color, entry_name) = entries
+        entry_name = self.app.select_single(BuilderName='entry_name')
+        entry_color = self.app.select_single(BuilderName='entry_color')
 
         self.assertTrue(entry_name.visible)
         self.assertTrue(entry_color.visible)
@@ -78,6 +89,9 @@ class PropertyTest(AutopilotTestCase):
         if not entry_name.has_focus:
             self.mouse.click_object(entry_name)
 
+        # the color entry is below the name entry
+        self.assertLess(entry_name.globalRect[1], entry_color.globalRect[1])
+
         # first entry has default focus
         self.assertEqual(entry_name.has_focus, True)
         self.assertEqual(entry_color.has_focus, False)
@@ -90,10 +104,35 @@ class PropertyTest(AutopilotTestCase):
         self.assertEqual(entry_name.text_length, 0)
         self.assertEqual(entry_color.text_length, 0)
 
-    #https://launchpad.net/bugs/1193342
-    @unittest.expectedFailure
-    def test_enum_properties(self):
-        '''enum properties'''
+    def test_enum_flags_properties(self):
+        '''enum and flags properties'''
 
+        # enum
         btn_greet = self.app.select_single('GtkButton', label='Greet')
-        self.assertTrue(hasattr(btn_greet, 'relief'))
+        self.assertEqual(btn_greet.relief, 'GTK_RELIEF_NORMAL')
+        self.assertEqual(btn_greet.resize_mode, 'GTK_RESIZE_PARENT')
+
+        res = self.app.select_many(relief='GTK_RELIEF_NORMAL', visible=True)
+        self.assertGreaterEqual(len(res), 3)
+        self.assertIn('Button', str(type(res[0])))
+
+        # flags
+        self.assertGreaterEqual(btn_greet.events, 0)
+
+        res = self.app.select_many('GtkButton', events=btn_greet.events)
+        self.assertGreater(len(res), 0)
+
+    def test_textview_properties(self):
+        """GtkTextView properties"""
+
+        t = self.app.select_single(BuilderName='textview_demo')
+        self.assertNotEqual(t, None)
+        self.assertEqual(t.editable, True)
+        self.assertEqual(t.overwrite, False)
+        # the buffer property points to a GtkTextBuffer object, which we want
+        # to translate to a plain string
+        self.assertEqual(t.buffer, 'This is a test application.')
+
+        # select by buffer contents
+        w = self.app.select_single(buffer='This is a test application.')
+        self.assertEqual(w.BuilderName, 'textview_demo')

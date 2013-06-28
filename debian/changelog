@@ -1,3 +1,22 @@
+autopilot-gtk (1.3+13.10.20130628-0ubuntu1) saucy; urgency=low
+
+  [ Martin Pitt ]
+  * Handle enum and flags properties. (LP: #1193342). (LP: #1193342)
+  * Expose GtkBuilder widget identifiers as "BuilderName" property. (LP:
+    #1082391). (LP: #1082391)
+  * This fixes the two test failures on raring which Francis saw in
+    https://code.launchpad.net/~pitti/autopilot-gtk/add-
+    tests/+merge/171036/comments/382574 I also sneaked in an unrelated,
+    but trivial change for dropping a leftover debugging statement, in
+    the interest of saving human reviewer and builder resources.
+  * Support GtkTextBuffer properties, to introspect GtkTextView
+    contents. (LP: #1194371)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 51
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Fri, 28 Jun 2013 00:01:10 +0000
+
 autopilot-gtk (1.3+13.10.20130627-0ubuntu1) saucy; urgency=low
 
   [ Martin Pitt ]

@@ -41,17 +41,23 @@ class GnomeAppTest(AutopilotTestCase):
         """Run a search"""
 
         revealer = self.app.select_single('GdRevealer')
-        self.assertNotEqual(revealer, None)
-
-        # search bar not visible by default
-        self.assertEqual(revealer.child_revealed, False)
+        if revealer:
+            # search bar not visible by default
+            self.assertEqual(revealer.child_revealed, False)
+        else:
+            # g-s-l < 3.8 did not have the GdRevealer object yet
+            findbar = self.app.select_single('LogviewFindbar')
+            self.assertEqual(findbar.visible, False)
 
         search_btn = self.app.select_single('GtkToggleButton')
         self.assertNotEqual(search_btn, None)
         self.mouse.click_object(search_btn)
 
         # should trigger search bar
-        self.assertThat(lambda: revealer.child_revealed, Eventually(Equals(True)))
+        if revealer:
+            self.assertThat(lambda: revealer.child_revealed, Eventually(Equals(True)))
+        else:
+            self.assertThat(lambda: findbar.visible, Eventually(Equals(True)))
         search = self.app.select_single('GtkSearchEntry', visible=True)
         self.assertTrue(search.has_focus)
 

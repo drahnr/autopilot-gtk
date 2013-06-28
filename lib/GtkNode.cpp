@@ -37,6 +37,55 @@ GtkNode::~GtkNode()
   g_clear_object(&object_);
 }
 
+// we cannot represent GEnums, GFlags, etc. through D-BUS and autopilot's API,
+// so convert them to strings, ints, and other primitive types
+static void convert_value (GParamSpec *pspec, GValue *value)
+{
+  if (G_VALUE_HOLDS_ENUM(value)) {
+    GEnumValue *ev = g_enum_get_value(G_PARAM_SPEC_ENUM(pspec)->enum_class,
+                                      g_value_get_enum(value));
+    if (ev != NULL) {
+      //g_debug("attribute %s of type %s holds enum %s", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type), ev->value_name);
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_STRING);
+      g_value_set_string(value, ev->value_name);
+    }
+  }
+
+  // representing flags as strings is too unwieldy; let's just represent them
+  // as integer
+  if (G_VALUE_HOLDS_FLAGS(value)) {
+      guint flags = g_value_get_flags(value);
+      //g_debug("attribute %s of type %s holds flags %x", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type), flags);
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_UINT);
+      g_value_set_uint(value, flags);
+  }
+
+  if (pspec->value_type == GTK_TYPE_TEXT_BUFFER) {
+    GtkTextBuffer *buf = GTK_TEXT_BUFFER(g_value_get_object(value));
+    if (buf != NULL) {
+      //g_debug("attribute %s of type %s holds GtkTextBuffer", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type));
+      GtkTextIter start, end;
+      gtk_text_buffer_get_start_iter(buf, &start);
+      gtk_text_buffer_get_end_iter(buf, &end);
+      gchar* text = gtk_text_iter_get_text(&start, &end);
+
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_STRING);
+      g_value_set_string(value, (text != NULL) ? text : "");
+
+      g_free(text);
+    }
+  }
+}
+
 GVariant* GtkNode::Introspect() const
 {
   GVariantBuilder builder;
@@ -59,6 +108,7 @@ GVariant* GtkNode::Introspect() const
         GValue value = G_VALUE_INIT;
         g_value_init(&value, param_spec->value_type);
         g_object_get_property(object_, g_param_spec_get_name(param_spec), &value);
+        convert_value(param_spec, &value);
         builder_wrapper.add(param_spec->name, &value);
         g_value_unset(&value); //Free the memory accquired by the value object. Absence of this was causig the applications to crash.
       }
@@ -73,6 +123,10 @@ GVariant* GtkNode::Introspect() const
 
   // add the names of our children
   builder_wrapper.add("Children", GetChildNodeNames());
+
+  // add the GtkBuilder name
+  if (GTK_IS_BUILDABLE (object_))
+    builder_wrapper.add("BuilderName", gtk_buildable_get_name(GTK_BUILDABLE (object_)));
 
   // add the GlobalRect property: "I am a GtkWidget" edition
   if (GTK_IS_WIDGET(object_)) {
@@ -181,55 +235,55 @@ std::string GtkNode::GetPath() const {
 
 bool GtkNode::MatchProperty(const std::string& name,
                             const std::string& value) const {
-
-  // g_debug("attempting to match a node's property");
-
-  if (name == "id") {
+  if (name == "id")
     return value == std::to_string(GetObjectId());
 
-  } else {
-    GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
-    GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
-    if (pspec == NULL)
-      return false;
-
-    g_debug("Matching a property of type (%s).", g_type_name(G_PARAM_SPEC_VALUE_TYPE(pspec)));
-
-    if (pspec && G_PARAM_SPEC_VALUE_TYPE(pspec) == G_TYPE_INT) {
-      GValue dest_value = G_VALUE_INIT;
-      g_value_init(&dest_value, G_TYPE_INT);
-      g_object_get_property(object_, name.c_str(), &dest_value);
-
-      const gint cint = g_value_get_int(&dest_value);
-      g_value_unset(&dest_value);
-      std::stringstream out;
-      out << cint;
-      std::string dest_string(out.str());
-      return dest_string == value;
-
-    } else if (pspec && G_PARAM_SPEC_VALUE_TYPE(pspec) == G_TYPE_DOUBLE) {
-      GValue dest_value = G_VALUE_INIT;
-      g_value_init(&dest_value, G_TYPE_DOUBLE);
-      g_object_get_property(object_, name.c_str(), &dest_value);
-
-      const gdouble cdbl = g_value_get_double(&dest_value);
-      g_value_unset(&dest_value);
-      std::stringstream out;
-      out << cdbl;
-      std::string dest_string(out.str());
-      return dest_string == value;
-
-    } else if (pspec && G_PARAM_SPEC_VALUE_TYPE(pspec) == G_TYPE_STRING) {
-      gchar *strval = NULL;
-      g_object_get(object_, name.c_str(), &strval, NULL);
-      if (strval == NULL)
-        return false;
-
-      std::string dest_string(strval);
-      return dest_string == value;
-    }
-    return false;
+  if (name == "BuilderName" && GTK_IS_BUILDABLE(object_)) {
+      const gchar* name = gtk_buildable_get_name(GTK_BUILDABLE (object_));
+      return name != NULL && std::string(name) == value;
   }
+
+  GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
+  GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
+  if (pspec == NULL)
+    return false;
+
+  // read the property into a GValue
+  g_debug("Matching property %s of type (%s).", g_param_spec_get_name(pspec),
+          g_type_name(G_PARAM_SPEC_VALUE_TYPE(pspec)));
+
+  GValue dest_value = G_VALUE_INIT;
+  g_value_init(&dest_value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+  g_object_get_property(object_, name.c_str(), &dest_value);
+  convert_value(pspec, &dest_value);
+  std::string dest_string;
+
+  // convert it to a string; always doing string comparison avoids having to do
+  // type comparison, conversion and error handling on value
+  switch (G_VALUE_TYPE(&dest_value)) {
+    case G_TYPE_INT:
+      dest_string = std::to_string(g_value_get_int(&dest_value));
+      break;
+    case G_TYPE_UINT:
+      dest_string = std::to_string(g_value_get_uint(&dest_value));
+      break;
+    case G_TYPE_DOUBLE:
+      dest_string = std::to_string(g_value_get_double(&dest_value));
+      break;
+    case G_TYPE_STRING: {
+      const gchar *str = g_value_get_string(&dest_value);
+      dest_string = (str != NULL) ? str : "";
+      break;
+      }
+    default:
+      g_debug("Unhandled type %s for matching property %s",
+              g_type_name(G_VALUE_TYPE(&dest_value)), g_param_spec_get_name(pspec));
+      g_value_unset(&dest_value);
+      return false;
+  }
+
+  g_value_unset(&dest_value);
+  return dest_string == value;
 }
 
 xpathselect::NodeList GtkNode::Children() const {

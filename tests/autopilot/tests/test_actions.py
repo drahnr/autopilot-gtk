@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os.path
+import os
 
 from autopilot.testcase import AutopilotTestCase
 from autopilot.matchers import Eventually
@@ -30,20 +31,15 @@ class ActionsTest(AutopilotTestCase):
 
     def setUp(self):
         super(ActionsTest, self).setUp()
+        # we want to test the position of GtkMenuItems here, disable global menubar
+        os.environ['UBUNTU_MENUPROXY'] = '0'
         self.app = self.launch_test_application(test_app, app_type='gtk')
 
     def test_greeting_keyboard(self):
         """Greeting with keyboard navigation"""
 
-        entries = self.app.select_many('GtkEntry')
-        self.assertEqual(len(entries), 2)
-        # the upper entry is for the name, the lower for the color
-        # FIXME: once we have proper names (LP# 1082391), replace this with an
-        # assertion
-        if entries[0].globalRect[1] < entries[1].globalRect[1]:
-            (entry_name, entry_color) = entries
-        else:
-            (entry_color, entry_name) = entries
+        entry_name = self.app.select_single(BuilderName='entry_name')
+        entry_color = self.app.select_single(BuilderName='entry_color')
 
         # FIXME: This isn't necessary for real X, but under Xvfb there is no
         # default focus sometimes
@@ -84,15 +80,8 @@ class ActionsTest(AutopilotTestCase):
     def test_greeting_mouse(self):
         """Greeting with mouse navigation"""
 
-        entries = self.app.select_many('GtkEntry')
-        self.assertEqual(len(entries), 2)
-        # the upper entry is for the name, the lower for the color
-        # FIXME: once we have proper names (LP# 1082391), replace this with an
-        # assertion
-        if entries[0].globalRect[1] < entries[1].globalRect[1]:
-            (entry_name, entry_color) = entries
-        else:
-            (entry_color, entry_name) = entries
+        entry_name = self.app.select_single(BuilderName='entry_name')
+        entry_color = self.app.select_single(BuilderName='entry_color')
 
         # FIXME: This isn't necessary for real X, but under Xvfb there is no
         # default focus sometimes
