@@ -83,23 +83,22 @@ class XPathQueryTest(AutopilotTestCase):
     def test_select_by_attribute(self):
         """Select widgets with attribute pattern"""
 
-        state = self.app.get_state_by_path('//*[label=gtk-delete]')
+        state = self.app.get_state_by_path('//*[label="gtk-delete"]')
         self.assertEqual(len(state), 1, state)
-        self.assertEqual(state[0][1]['label'], 'gtk-delete')
+        self.assertEqual(state[0][1]['label'], [0, 'gtk-delete'])
         self.assertTrue(state[0][0].endswith('/GtkButton'), state[0][0])
 
     # https://launchpad.net/bugs/1179806
+    # TODO: Make this pass!
     @unittest.expectedFailure
     def test_select_by_attribute_spaces(self):
         """Select widgets with attribute pattern containing spaces"""
 
-        # none of these work ATM, but are supposed to:
-        #state = self.app.get_state_by_path('//*[label=Hello&#x20;Color!]')
-        #state = self.app.get_state_by_path('//*[label=Hello&#x0020;Color!]')
-        state = self.app.get_state_by_path('//*[label="Hello Color!"]')
-        self.assertEqual(len(state), 1, str(state))
-        self.assertEqual(state[0][1]['label'], 'Hello Color!')
-        self.assertTrue(state[0][0].endswith('/GtkLabel'), state[0][0])
+        for state_str in ('//*[label="Hello\\x20Color!"]', '//*[label="Hello Color!"]'):
+            state = self.app.get_state_by_path(state_str)
+            self.assertEqual(len(state), 1, str(state))
+            self.assertEqual(state[0][1]['label'], 'Hello Color!')
+            self.assertTrue(state[0][0].endswith('/GtkLabel'), state[0][0])
 
     @classmethod
     def _get_widgets(klass, obj, widget_set):

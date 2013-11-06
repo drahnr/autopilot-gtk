@@ -17,7 +17,9 @@
 import os.path
 import unittest
 
+from autopilot.introspection.dbus import StateNotFoundError
 from autopilot.testcase import AutopilotTestCase
+from testtools.matchers import raises
 
 tests_dir = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.realpath(__file__))))
@@ -75,11 +77,14 @@ class WidgetTreeTest(AutopilotTestCase):
 
         # we have no instances of these
         for wtype in ('GtkTable', 'GtkRadioButton'):
-            self.assertIs(self.app.select_single(wtype), None)
+            self.assertThat(
+                lambda: self.app.select_single(wtype),
+                raises(StateNotFoundError)
+            )
 
         # qualified: visible property is not unique
         self.assertRaises(ValueError,
-                          self.app.select_single, 'GtkButton', visible=1)
+                          self.app.select_single, 'GtkButton', visible=True)
 
         # qualified: label property is unique within GtkButton
         w = self.app.select_single('GtkButton', label='gtk-quit')
@@ -98,7 +103,7 @@ class WidgetTreeTest(AutopilotTestCase):
         self.assertRaises(ValueError, self.app.select_single, label='gtk-quit')
 
         # ... but it is unique for focussable widgets (menus don't allow that)
-        w = self.app.select_single(label='gtk-quit', can_focus=1)
+        w = self.app.select_single(label='gtk-quit', can_focus=True)
         self.assertIn('.GtkButton', str(type(w)))
         self.assertEqual(w.label, 'gtk-quit')
 
@@ -141,8 +146,6 @@ class WidgetTreeTest(AutopilotTestCase):
         # button and menu item
         self.assertEqual(len(res), 2)
 
-    # https://launchpad.net/bugs/1194763
-    @unittest.expectedFailure
     def test_select_int(self):
         """select_*() with int properties"""
 
@@ -158,8 +161,6 @@ class WidgetTreeTest(AutopilotTestCase):
 
         self.assertNotEqual(self.app.select_single(border_width=2), None)
 
-    # https://launchpad.net/bugs/1194763
-    @unittest.expectedFailure
     def test_select_bool(self):
         """select_*() with boolean properties"""
 

@@ -112,7 +112,7 @@ int gtk_module_init(gint argc, char *argv[]) {
   autopilot_introspection = autopilot_introspection_skeleton_new ();
   g_bus_get (G_BUS_TYPE_SESSION, NULL, bus_acquired, NULL);
   // always log this:
-  std::cout << "Autopilot GTK interface loaded." << std::endl;
+  std::cout << "Autopilot GTK interface loaded. Wire protocol version is " << WIRE_PROTO_VERSION << "." << std::endl;
   return 0;
 }
 

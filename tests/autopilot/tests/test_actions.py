@@ -18,8 +18,9 @@ import os.path
 import os
 
 from autopilot.testcase import AutopilotTestCase
+from autopilot.introspection.dbus import StateNotFoundError
 from autopilot.matchers import Eventually
-from testtools.matchers import Equals, NotEquals
+from testtools.matchers import Equals, NotEquals, raises
 
 tests_dir = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.realpath(__file__))))
@@ -56,7 +57,10 @@ class ActionsTest(AutopilotTestCase):
         self.assertThat(entry_color.text, Eventually(Equals('red')))
 
         # should not have any dialogs
-        self.assertEqual(self.app.select_single('GtkMessageDialog'), None)
+        self.assertThat(
+            lambda: self.app.select_single('GtkMessageDialog'),
+            raises(StateNotFoundError)
+        )
 
         # focus and activate the "Greet" button
         self.keyboard.press_and_release('Tab')
@@ -74,8 +78,10 @@ class ActionsTest(AutopilotTestCase):
 
         # close the dialog
         self.keyboard.press_and_release('Enter')
-        self.assertThat(lambda: self.app.select_single('GtkMessageDialog', visible=True),
-                        Eventually(Equals(None)))
+        self.assertThat(
+            lambda: self.app.select_single('GtkMessageDialog', visible=True),
+            raises(StateNotFoundError)
+        )
 
     def test_greeting_mouse(self):
         """Greeting with mouse navigation"""
@@ -98,7 +104,10 @@ class ActionsTest(AutopilotTestCase):
         self.assertThat(entry_color.text, Eventually(Equals('blue')))
 
         # should not have any dialogs
-        self.assertEqual(self.app.select_single('GtkMessageDialog'), None)
+        self.assertThat(
+            lambda: self.app.select_single('GtkMessageDialog'),
+            raises(StateNotFoundError)
+        )
 
         # focus and activate the "Greet" button
         btn = self.app.select_single('GtkButton', label='Greet')
@@ -118,8 +127,10 @@ class ActionsTest(AutopilotTestCase):
         # close the dialog
         btn = md.select_single('GtkButton', label='gtk-close')
         self.mouse.click_object(btn)
-        self.assertThat(lambda: self.app.select_single('GtkMessageDialog', visible=True),
-                        Eventually(Equals(None)))
+        self.assertThat(
+            lambda: self.app.select_single('GtkMessageDialog', visible=True),
+            raises(StateNotFoundError)
+        )
 
     def test_clear(self):
         """Using Clear button with mouse"""

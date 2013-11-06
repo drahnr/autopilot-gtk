@@ -25,33 +25,43 @@
 #include <xpathselect/node.h>
 #include <xpathselect/xpathselect.h>
 #include <string>
+#include <cstdint>
 #include "Variant.h"
 
-class GtkNode: public xpathselect::Node {
-public:
-  typedef std::shared_ptr<GtkNode> Ptr;
+// #include <memory>
 
-  GtkNode(GObject* object, std::string const& parent_name);
+class GtkNode: public xpathselect::Node, public std::enable_shared_from_this<GtkNode>
+{
+public:
+  typedef std::shared_ptr<const GtkNode> Ptr;
+
+  GtkNode(GObject* object, Ptr const& parent);
+  GtkNode(GObject* object);
   virtual ~GtkNode();
 
   virtual GVariant* Introspect() const;
 
   virtual std::string GetName() const;
   virtual std::string GetPath() const;
-  virtual bool MatchProperty(const std::string& name,
-                             const std::string& value) const;
-  virtual xpathselect::NodeList Children() const;
+  virtual int32_t GetId() const;
+  virtual xpathselect::Node::Ptr GetParent() const;
+  virtual bool MatchStringProperty(const std::string& name,
+                                   const std::string& value) const;
+  virtual bool MatchIntegerProperty(const std::string& name,
+                                    int32_t value) const;
+  virtual bool MatchBooleanProperty(const std::string& name,
+                                    bool value) const;
+  virtual xpathselect::NodeVector Children() const;
 
   static const std::string AP_ID_NAME;
 
 private:
   GObject *object_;
   std::string full_path_;
+  Ptr parent_;
 
   virtual GVariant* GetChildNodeNames() const;
-  virtual intptr_t GetObjectId() const;
   virtual void GetGlobalRect(GdkRectangle* rect) const;
-  virtual GVariant* ComposeRectVariant(gint x, gint y, gint height, gint width) const;
   void AddAtkComponentProperties(variant::BuilderWrapper &builder_wrapper,
                                  AtkComponent *atk_component) const;
 };

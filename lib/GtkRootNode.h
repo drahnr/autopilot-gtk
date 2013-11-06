@@ -33,12 +33,14 @@ class GtkRootNode: public GtkNode
   GtkRootNode();
 
   virtual GVariant* Introspect() const;
-  virtual intptr_t GetObjectId() const;
 
   virtual std::string GetName() const;
   virtual std::string GetPath() const;
-  virtual bool MatchProperty(const std::string& name, const std::string& value) const;
-  virtual xpathselect::NodeList Children() const;
+  virtual int32_t GetId() const;
+  virtual bool MatchIntegerProperty(const std::string& name, int32_t value) const;
+  virtual bool MatchBooleanProperty(const std::string& name, bool value) const;
+  virtual bool MatchStringProperty(const std::string& name, const std::string& value) const;
+  virtual xpathselect::NodeVector Children() const;
 
  private:
   virtual GVariant* GetChildNodeNames() const;

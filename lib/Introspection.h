@@ -27,6 +27,8 @@
 
 extern AutopilotIntrospection* autopilot_introspection;
 
+static std::string WIRE_PROTO_VERSION("1.4");
+
 void bus_acquired (GObject *object,
                           GAsyncResult * res,
                           gpointer user_data);

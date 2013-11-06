@@ -63,5 +63,4 @@ class GnomeAppTest(AutopilotTestCase):
 
         # something that will not be in /etc/issue
         self.keyboard.type('Bogus12!')
-        self.assertThat(lambda: self.app.select_single('GtkLabel', label=u'No matches found'),
-                        Eventually(NotEquals(None)))
+        self.app.wait_select_single('GtkLabel', label=u'No matches found')

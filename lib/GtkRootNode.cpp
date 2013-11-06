@@ -27,7 +27,7 @@
 #include "Variant.h"
 
 GtkRootNode::GtkRootNode()
-  : GtkNode(NULL, std::string()) {
+  : GtkNode(NULL) {
 }
 
 GVariant* GtkRootNode::Introspect() const {
@@ -35,14 +35,13 @@ GVariant* GtkRootNode::Introspect() const {
   g_variant_builder_init(&builder, G_VARIANT_TYPE("a{sv}"));
   variant::BuilderWrapper builder_wrapper(&builder);
   // add our unique autopilot-id
-  builder_wrapper.add(AP_ID_NAME.c_str(), GetObjectId());
+  builder_wrapper.add(AP_ID_NAME.c_str(), GetId());
   // add the names of our children
   builder_wrapper.add("Children", GetChildNodeNames());
   return g_variant_builder_end(&builder);
 }
 
-intptr_t GtkRootNode::GetObjectId() const {
-  // FIXME: we could be consistent and return the memory address
+int32_t GtkRootNode::GetId() const {
   return 1;
 }
 
@@ -54,30 +53,39 @@ std::string GtkRootNode::GetPath() const {
   return "/" + GetName();
 }
 
-bool GtkRootNode::MatchProperty(const std::string& name,
-                                const std::string& value) const {
-  //g_debug("matching a property for the root node");
+bool GtkRootNode::MatchIntegerProperty(const std::string& name, int32_t value) const
+{
+  // Root node only matches one property - id:
   if (name == "id")
-    // yes we just compare as a string; use of intptr_t makes casting tricky
-    return value == std::to_string(GetObjectId());
+    return value == GetId();
   return false;
 }
 
-xpathselect::NodeList GtkRootNode::Children() const {
+bool GtkRootNode::MatchBooleanProperty(const std::string& name, bool value) const
+{
+  return false;
+}
+
+bool GtkRootNode::MatchStringProperty(const std::string& name, const std::string& value) const
+{
+  return false;
+}
+
+xpathselect::NodeVector GtkRootNode::Children() const {
   //g_debug("getting the children of a node");
-  xpathselect::NodeList children;
+  xpathselect::NodeVector children;
 
   // add all the toplevel nodes as children to the root node
   GList* toplevels_list = gtk_window_list_toplevels();
   GList* elem;
   for (elem = toplevels_list; elem; elem = elem->next) {
     GObject *node = reinterpret_cast<GObject*>(elem->data);
-    children.push_back(std::make_shared<GtkNode>(node, GetPath()));
+    children.push_back(std::make_shared<GtkNode>(node, shared_from_this()));
 
     // if the AtkObjects are available, expose the Atk hierarchy as well
     AtkObject *atk_object = gtk_widget_get_accessible(GTK_WIDGET(node));
     if (atk_object != NULL)
-        children.push_back(std::make_shared<GtkNode>(G_OBJECT(atk_object), GetPath()));
+        children.push_back(std::make_shared<GtkNode>(G_OBJECT(atk_object), shared_from_this()));
   }
   g_list_free(toplevels_list);
   return children;

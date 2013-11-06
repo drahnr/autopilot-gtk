@@ -82,7 +82,7 @@ gboolean handle_get_version (AutopilotIntrospection *introspection_service,
 {
     autopilot_introspection_complete_get_version(introspection_service,
                                                  invocation,
-                                                 "1.3");
+                                                 WIRE_PROTO_VERSION.c_str());
     return TRUE;
 }
 
@@ -110,12 +110,12 @@ std::list<GtkNode::Ptr> GetNodesThatMatchQuery(std::string const& query_string) 
 
   //g_debug("selecting nodes");
   std::list<GtkNode::Ptr> node_list;
-  xpathselect::NodeList selected_nodes_list;
+  xpathselect::NodeVector selected_nodes_list;
   selected_nodes_list = xpathselect::SelectNodes(root, query_string);
   //g_debug("finished selecting nodes");
   for (auto node : selected_nodes_list) {
     // node may be our root node wrapper *or* an ordinary GObject wrapper
-    auto object_ptr = std::static_pointer_cast<GtkNode>(node);
+    auto object_ptr = std::static_pointer_cast<const GtkNode>(node);
     if (object_ptr)
       node_list.push_back(object_ptr);
   }

@@ -46,7 +46,9 @@ public:
   BuilderWrapper& add(char const* name, float value);
   BuilderWrapper& add(char const* name, double value);
   BuilderWrapper& add(char const* name, GVariant* value);
-  BuilderWrapper& add(char const* name, GValue* value);
+  BuilderWrapper& add_gvalue(char const* name, GValue* value);
+
+  BuilderWrapper& add(char const* name, GdkRectangle value);
 
 private:
   GVariantBuilder* builder_;
