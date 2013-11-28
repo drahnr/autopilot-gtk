@@ -284,13 +284,12 @@ bool GtkNode::MatchStringProperty(const std::string& name,
   g_value_init(&dest_value, G_PARAM_SPEC_VALUE_TYPE(pspec));
   g_object_get_property(object_, name.c_str(), &dest_value);
   convert_value(pspec, &dest_value);
-  std::string dest_string;
 
   if (G_VALUE_TYPE(&dest_value) == G_TYPE_STRING) {
       const gchar *str = g_value_get_string(&dest_value);
-      dest_string = (str != NULL) ? str : "";
+      int result = g_strcmp0 (str, value.c_str());
       g_value_unset(&dest_value);
-      return dest_string == value;
+      return result == 0;
   }
   else {
       g_debug("Property %s exists, but is not a string (is %s).",

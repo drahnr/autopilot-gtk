@@ -1,3 +1,23 @@
+autopilot-gtk (1.4+14.04.20131128.1-0ubuntu1) trusty; urgency=low
+
+  [ Martin Pitt ]
+  * Drop generated GDBus sources from bzr and generate them during
+    build.
+  * Avoid unnecessary string duplication when matching properties. This
+    also fixes a rare crash when cleaning up the temporary string
+    object. (LP: #1254996)
+
+  [ Mathieu Trudel-Lapierre ]
+  * Fix source format: make it 1.0.
+
+  [ Timo Jyrinki ]
+  * Wrap-and-sort dependencies, remove trailing whitespace.
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 62
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Thu, 28 Nov 2013 10:03:59 +0000
+
 autopilot-gtk (1.4+14.04.20131106.1-0ubuntu1) trusty; urgency=low
 
   [ Thomi Richards ]
