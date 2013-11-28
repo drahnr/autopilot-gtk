@@ -19,15 +19,100 @@
 
 #include <string>
 #include <gdk/gdk.h>
+#include <sstream>
 
-#include <string>
 #include "GtkNode.h"
 #include "Variant.h"
 
 const std::string GtkNode::AP_ID_NAME = "id";
+static guint32 cur_obj_id = 2; // start at 2 since 1 is reserved for the root node
+
+GtkNode::GtkNode(GObject* obj, GtkNode::Ptr const& parent)
+  : object_(obj)
+  , parent_(parent)
+{
+  std::string parent_path = parent ? parent->GetPath() : "";
+  full_path_ = parent_path + "/" + GetName();
+  if (object_ != NULL)
+  {
+    g_object_ref(object_);
+    GQuark OBJ_ID = g_quark_from_static_string("AUTOPILOT_OBJECT_ID");
+    gpointer val = g_object_get_qdata (object_, OBJ_ID);
+    if (val == NULL)
+    {
+      g_object_set_qdata (object_, OBJ_ID, reinterpret_cast<gpointer>(cur_obj_id++));
+    }
+  }
+}
 
 GtkNode::GtkNode(GObject* obj)
-  : object_(obj) {
+  : object_(obj)
+{
+  full_path_ = "/" + GetName();
+  if (object_ != NULL)
+  {
+    g_object_ref(object_);
+    GQuark OBJ_ID = g_quark_from_static_string("AUTOPILOT_OBJECT_ID");
+    gpointer val = g_object_get_qdata (object_, OBJ_ID);
+    if (val == NULL)
+    {
+      g_object_set_qdata (object_, OBJ_ID, reinterpret_cast<gpointer>(cur_obj_id++));
+    }
+  }
+}
+
+GtkNode::~GtkNode()
+{
+  g_clear_object(&object_);
+}
+
+// we cannot represent GEnums, GFlags, etc. through D-BUS and autopilot's API,
+// so convert them to strings, ints, and other primitive types
+static void convert_value (GParamSpec *pspec, GValue *value)
+{
+  if (G_VALUE_HOLDS_ENUM(value)) {
+    GEnumValue *ev = g_enum_get_value(G_PARAM_SPEC_ENUM(pspec)->enum_class,
+                                      g_value_get_enum(value));
+    if (ev != NULL) {
+      //g_debug("attribute %s of type %s holds enum %s", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type), ev->value_name);
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_STRING);
+      g_value_set_string(value, ev->value_name);
+    }
+  }
+
+  // representing flags as strings is too unwieldy; let's just represent them
+  // as integer
+  if (G_VALUE_HOLDS_FLAGS(value)) {
+      guint flags = g_value_get_flags(value);
+      //g_debug("attribute %s of type %s holds flags %x", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type), flags);
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_UINT);
+      g_value_set_uint(value, flags);
+  }
+
+  if (pspec->value_type == GTK_TYPE_TEXT_BUFFER) {
+    GtkTextBuffer *buf = GTK_TEXT_BUFFER(g_value_get_object(value));
+    if (buf != NULL) {
+      //g_debug("attribute %s of type %s holds GtkTextBuffer", g_param_spec_get_name(pspec),
+      //        g_type_name(pspec->value_type));
+      GtkTextIter start, end;
+      gtk_text_buffer_get_start_iter(buf, &start);
+      gtk_text_buffer_get_end_iter(buf, &end);
+      gchar* text = gtk_text_iter_get_text(&start, &end);
+
+      g_value_unset(value);
+      *value = G_VALUE_INIT;
+      g_value_init(value, G_TYPE_STRING);
+      g_value_set_string(value, (text != NULL) ? text : "");
+
+      g_free(text);
+    }
+  }
 }
 
 GVariant* GtkNode::Introspect() const
@@ -41,6 +126,10 @@ GVariant* GtkNode::Introspect() const
   variant::BuilderWrapper builder_wrapper(&builder);
   for (uint i = 0; i < length; ++i) {
     GParamSpec* param_spec = properties[i];
+    // ATK's accessible-table-* properties generate "invalid property id" warnings
+    std::string prefix("accessible-table-");
+    if (std::string(g_param_spec_get_name(param_spec)).compare(0, prefix.length(), prefix) == 0)
+      continue;
     // see Launchpad bug #1108155: GtkTreePath mis-casts while copying, actuates here in "root" property
     if (std::string(g_type_name(param_spec->value_type)) != "GtkTreePath") {
       // some properties are only writeable; some toxic nodes change their names (?)
@@ -48,7 +137,8 @@ GVariant* GtkNode::Introspect() const
         GValue value = G_VALUE_INIT;
         g_value_init(&value, param_spec->value_type);
         g_object_get_property(object_, g_param_spec_get_name(param_spec), &value);
-        builder_wrapper.add(param_spec->name, &value);
+        convert_value(param_spec, &value);
+        builder_wrapper.add_gvalue(param_spec->name, &value);
         g_value_unset(&value); //Free the memory accquired by the value object. Absence of this was causig the applications to crash.
       }
     } else {
@@ -58,10 +148,14 @@ GVariant* GtkNode::Introspect() const
   g_free(properties);
 
   // add our unique autopilot-id
-  builder_wrapper.add(AP_ID_NAME.c_str(), GetObjectId());
+  builder_wrapper.add(AP_ID_NAME.c_str(), GetId());
 
   // add the names of our children
   builder_wrapper.add("Children", GetChildNodeNames());
+
+  // add the GtkBuilder name
+  if (GTK_IS_BUILDABLE (object_))
+    builder_wrapper.add("BuilderName", gtk_buildable_get_name(GTK_BUILDABLE (object_)));
 
   // add the GlobalRect property: "I am a GtkWidget" edition
   if (GTK_IS_WIDGET(object_)) {
@@ -71,28 +165,54 @@ GVariant* GtkNode::Introspect() const
     if (GDK_IS_WINDOW(gdk_window)) {
       GdkRectangle rect;
       GetGlobalRect(&rect);
-      //g_debug("Rect coords %d, %d, %d, %d", rect.x, rect.y, rect.width, rect.height);
-      GVariant *rect_gvariant = ComposeRectVariant(rect.x, rect.y, rect.width, rect.height);
-      builder_wrapper.add("globalRect", rect_gvariant);
+      builder_wrapper.add("globalRect", rect);
     }
+  } else if (ATK_IS_COMPONENT(object_)) {
+    AddAtkComponentProperties(builder_wrapper, ATK_COMPONENT(object_));
   }
   return g_variant_builder_end(&builder);
 }
 
-GVariant* GtkNode::ComposeRectVariant(gint x, gint y, gint height, gint width) const
+void GtkNode::AddAtkComponentProperties(variant::BuilderWrapper &builder_wrapper,
+                                        AtkComponent *atk_component) const
 {
-  //g_debug("composing a rect variant");
-  GVariantBuilder builder;
-  g_variant_builder_init(&builder, G_VARIANT_TYPE_ARRAY);
-  g_variant_builder_add(&builder, "i", x);
-  g_variant_builder_add(&builder, "i", y);
-  g_variant_builder_add(&builder, "i", height);
-  g_variant_builder_add(&builder, "i", width);
-  return g_variant_builder_end(&builder);
-}
+  AtkStateSet *states = atk_object_ref_state_set(ATK_OBJECT(atk_component));
 
-intptr_t GtkNode::GetObjectId() const {
-  return reinterpret_cast<intptr_t>(object_);
+  /* Expose a few states which might be especially interesting for autopilot */
+  bool visible = atk_state_set_contains_state(states, ATK_STATE_VISIBLE);
+  builder_wrapper.add("visible", visible);
+  if (visible) {
+    gint x, y, width, height;
+    x = y = width = height = -1;
+    atk_component_get_extents(atk_component, &x, &y, &width, &height,
+                              ATK_XY_SCREEN);
+    GdkRectangle r;
+    r.x = x;
+    r.y = y;
+    r.width = width;
+    r.height = height;
+    builder_wrapper.add("globalRect", r);
+  }
+
+  builder_wrapper.add("active",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_ACTIVE)));
+  builder_wrapper.add("checked",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_CHECKED)));
+  builder_wrapper.add("editable",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_EDITABLE)));
+  builder_wrapper.add("enabled",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_ENABLED)));
+  builder_wrapper.add("focused",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_FOCUSED)));
+  builder_wrapper.add("pressed",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_PRESSED)));
+  builder_wrapper.add("selected",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_SELECTED)));
+  builder_wrapper.add("sensitive",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_SENSITIVE)));
+  builder_wrapper.add("showing",
+                      bool(atk_state_set_contains_state(states, ATK_STATE_SHOWING)));
+  g_object_unref(G_OBJECT(states));
 }
 
 void GtkNode::GetGlobalRect(GdkRectangle* rect) const
@@ -118,42 +238,156 @@ void GtkNode::GetGlobalRect(GdkRectangle* rect) const
 
 std::string GtkNode::GetName() const {
   // autopilot uses the name of the GObject type
+  if (!object_) {
+    return std::string();
+  }
   return G_OBJECT_TYPE_NAME(object_);
 }
 
-bool GtkNode::MatchProperty(const std::string& name,
-                            const std::string& value) const {
-  //g_debug("attempting to match a node's property");
-  // yes we're transforming to strings and comparing there
-  if (name == "id") {
-    // FIXME: b/c intptr_t makes casting tricky, or just cast to long?
-    return value == std::to_string(GetObjectId());
-  } else {
-    GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
-    GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
-    // if we found the property and it can be expressed as a string
-    if (pspec && g_value_type_transformable(G_PARAM_SPEC_TYPE(pspec),
-                                            G_TYPE_STRING)) {
-      GValue dest_value = G_VALUE_INIT;
-      g_value_init(&dest_value, G_TYPE_STRING);
-      g_object_get_property(object_, name.c_str(), &dest_value);
-      std::string dest_string = g_value_get_string(&dest_value);
-      g_value_unset(&dest_value);
-      return dest_string == value;
-    }
-    return false;
-  }
+std::string GtkNode::GetPath() const {
+  return full_path_;
 }
 
-xpathselect::NodeList GtkNode::Children() const {
+int32_t GtkNode::GetId() const
+{
+  GQuark OBJ_ID = g_quark_from_static_string("AUTOPILOT_OBJECT_ID");
+  gpointer val = g_object_get_qdata (object_, OBJ_ID);
+  // this uglyness is required in order to stop the compiler complaining about the fact
+  // that we're casting a 64 bit type (gpointer) down to a 32 bit type (gint32) and may
+  // be truncating the value. It's safe to do, however, since we control what values are
+  // set in this quark, and they were initial gint32 values anyway.
+  guint32 id = static_cast<gint32>(reinterpret_cast<intptr_t>(val));
+  return id;
+}
+
+xpathselect::Node::Ptr GtkNode::GetParent() const
+{
+  return parent_;
+}
+bool GtkNode::MatchStringProperty(const std::string& name,
+                                  const std::string& value) const {
+  if (name == "BuilderName" && GTK_IS_BUILDABLE(object_)) {
+      const gchar* name = gtk_buildable_get_name(GTK_BUILDABLE (object_));
+      return name != NULL && std::string(name) == value;
+  }
+
+  GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
+  GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
+  if (pspec == NULL)
+    return false;
+
+  // read the property into a GValue
+  g_debug("Matching property %s of type (%s).", g_param_spec_get_name(pspec),
+          g_type_name(G_PARAM_SPEC_VALUE_TYPE(pspec)));
+
+  GValue dest_value = G_VALUE_INIT;
+  g_value_init(&dest_value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+  g_object_get_property(object_, name.c_str(), &dest_value);
+  convert_value(pspec, &dest_value);
+
+  if (G_VALUE_TYPE(&dest_value) == G_TYPE_STRING) {
+      const gchar *str = g_value_get_string(&dest_value);
+      int result = g_strcmp0 (str, value.c_str());
+      g_value_unset(&dest_value);
+      return result == 0;
+  }
+  else {
+      g_debug("Property %s exists, but is not a string (is %s).",
+              g_param_spec_get_name(pspec),
+              g_type_name(G_VALUE_TYPE(&dest_value))
+              );
+      g_value_unset(&dest_value);
+      return false;
+    }
+
+}
+
+bool GtkNode::MatchIntegerProperty(const std::string& name,
+                                  int32_t value) const {
+  if (name == "id")
+    return value == GetId();
+
+  GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
+  GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
+  if (pspec == NULL)
+    return false;
+
+  // read the property into a GValue
+  g_debug("Matching property %s of type (%s).", g_param_spec_get_name(pspec),
+          g_type_name(G_PARAM_SPEC_VALUE_TYPE(pspec)));
+
+  GValue dest_value = G_VALUE_INIT;
+  g_value_init(&dest_value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+  g_object_get_property(object_, name.c_str(), &dest_value);
+  convert_value(pspec, &dest_value);
+
+  if (G_VALUE_TYPE(&dest_value) == G_TYPE_INT) {
+    int v = g_value_get_int(&dest_value);
+    g_value_unset(&dest_value);
+    return value == v;
+  }
+  else if (G_VALUE_TYPE(&dest_value) == G_TYPE_UINT) {
+    int v = g_value_get_uint(&dest_value);
+    g_value_unset(&dest_value);
+    return value == v;
+  }
+  else {
+      g_debug("Property %s exists, but is not an integer (is %s).",
+              g_param_spec_get_name(pspec),
+              g_type_name(G_VALUE_TYPE(&dest_value))
+              );
+      g_value_unset(&dest_value);
+      return false;
+    }
+}
+
+bool GtkNode::MatchBooleanProperty(const std::string& name,
+                                   bool value) const {
+  GObjectClass* klass = G_OBJECT_GET_CLASS(object_);
+  GParamSpec* pspec = g_object_class_find_property(klass, name.c_str());
+  if (pspec == NULL)
+    return false;
+
+  // read the property into a GValue
+  g_debug("Matching property %s of type (%s).", g_param_spec_get_name(pspec),
+          g_type_name(G_PARAM_SPEC_VALUE_TYPE(pspec)));
+
+  GValue dest_value = G_VALUE_INIT;
+  g_value_init(&dest_value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+  g_object_get_property(object_, name.c_str(), &dest_value);
+  convert_value(pspec, &dest_value);
+
+  if (G_VALUE_TYPE(&dest_value) == G_TYPE_BOOLEAN) {
+    bool v = g_value_get_boolean(&dest_value);
+    g_value_unset(&dest_value);
+    return value == v;
+  }
+  else {
+      g_debug("Property %s exists, but is not a boolean (is %s).",
+              g_param_spec_get_name(pspec),
+              g_type_name(G_VALUE_TYPE(&dest_value))
+              );
+      g_value_unset(&dest_value);
+      return false;
+    }
+}
+
+xpathselect::NodeVector GtkNode::Children() const {
   //g_debug("getting the children of a node");
-  xpathselect::NodeList children;
+  xpathselect::NodeVector children;
   if (GTK_IS_CONTAINER(object_)) {
     GList* gtk_children = gtk_container_get_children(GTK_CONTAINER(object_));
     for (GList* elem = gtk_children; elem; elem = elem->next) {
-      children.push_back(std::make_shared<GtkNode>(G_OBJECT(elem->data)));
+      children.push_back(std::make_shared<GtkNode>(G_OBJECT(elem->data), shared_from_this()));
     }
     g_list_free(gtk_children);
+  } else if (ATK_IS_OBJECT(object_)) {
+    AtkObject *atk_object = ATK_OBJECT(object_);
+    int n_children = atk_object_get_n_accessible_children(atk_object);
+    for (int i = 0; i < n_children; i++) {
+      AtkObject *child = atk_object_ref_accessible_child(atk_object, i);
+      children.push_back(std::make_shared<GtkNode>(G_OBJECT(child), shared_from_this()));
+    }
   }
 
   return children;

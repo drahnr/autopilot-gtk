@@ -27,6 +27,8 @@
 
 extern AutopilotIntrospection* autopilot_introspection;
 
+static std::string WIRE_PROTO_VERSION("1.4");
+
 void bus_acquired (GObject *object,
                           GAsyncResult * res,
                           gpointer user_data);
@@ -34,6 +36,8 @@ gboolean handle_get_state (AutopilotIntrospection* introspection_service,
                            GDBusMethodInvocation* invocation,
                            const gchar * arg,
                            gpointer user_data);
+gboolean handle_get_version (AutopilotIntrospection *introspection_service,
+                             GDBusMethodInvocation *invocation);
 GVariant* Introspect(std::string const& query_string);
 std::list<GtkNode::Ptr> GetNodesThatMatchQuery(std::string const& query_string);
 

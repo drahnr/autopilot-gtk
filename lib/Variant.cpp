@@ -17,9 +17,12 @@
  * Authored by: Tim Penhey <tim.penhey@canonical.com>
  */
 
+#include <gdk/gdk.h>
+
 #include <iostream>
 #include "Variant.h"
 
+#include "autopilot_types.h"
 namespace variant
 {
 
@@ -29,82 +32,210 @@ BuilderWrapper::BuilderWrapper(GVariantBuilder* builder)
 
 BuilderWrapper& BuilderWrapper::add(char const* name, bool value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_boolean(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_boolean(value));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, char const* value)
 {
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
   if (value)
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(value));
+    g_variant_builder_add(&b, "v", g_variant_new_string(value));
   else
-    g_variant_builder_add(builder_, "{sv}", name, g_variant_new_string(""));
+    g_variant_builder_add(&b, "v", g_variant_new_string(""));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
 
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, std::string const& value)
 {
-  g_variant_builder_add(builder_, "{sv}", name,
-                        g_variant_new_string(value.c_str()));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_string(value.c_str()));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int32(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_int32(value));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, long int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_int64(value));
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, long long int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_int64(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_int64(value));
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, unsigned int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint32(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_uint32(value));
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, long unsigned int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_uint64(value));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, long long unsigned int value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_uint64(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_uint64(value));
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, float value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_double(value));
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, double value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, g_variant_new_double(value));
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+  g_variant_builder_add(&b, "v", g_variant_new_double(value));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 
 BuilderWrapper& BuilderWrapper::add(char const* name, GVariant* value)
 {
-  g_variant_builder_add(builder_, "{sv}", name, value);
+  if (value)
+  {
+    GVariantBuilder b;
+    g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+    g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_PLAIN));
+    g_variant_builder_add(&b, "v", value);
+    g_variant_builder_add(
+      builder_,
+      "{sv}",
+      name,
+      g_variant_builder_end(&b)
+    );
+  }
   return *this;
 }
 
-BuilderWrapper& BuilderWrapper::add(char const* name, GValue* value)
+BuilderWrapper& BuilderWrapper::add_gvalue(char const* name, GValue* value)
 {
   switch (G_VALUE_TYPE(value)) {
   case G_TYPE_CHAR:
@@ -119,7 +250,7 @@ BuilderWrapper& BuilderWrapper::add(char const* name, GValue* value)
     break;
   case G_TYPE_BOOLEAN:
     {
-      add(name, g_value_get_boolean(value));
+      add(name, (bool) g_value_get_boolean(value));
     }
     break;
   case G_TYPE_INT:
@@ -197,16 +328,31 @@ BuilderWrapper& BuilderWrapper::add(char const* name, GValue* value)
       add(name, g_value_get_object(value));
     }
     break;
-  case G_TYPE_VARIANT:
-    {
-      add(name, g_value_get_variant(value));
-    }
-    break;
   default:
-    //g_warning("unsupported type: %s", g_type_name(G_VALUE_TYPE(value)));
+    g_warning("unsupported type: %s", g_type_name(G_VALUE_TYPE(value)));
     {}
     break;
   }
+  return *this;
+}
+
+BuilderWrapper& BuilderWrapper::BuilderWrapper::add(char const* name, GdkRectangle value)
+{
+  GVariantBuilder b;
+  g_variant_builder_init(&b, G_VARIANT_TYPE("av"));
+
+  g_variant_builder_add(&b, "v", g_variant_new_int32(TYPE_RECT));
+  g_variant_builder_add(&b, "v", g_variant_new_int32(value.x));
+  g_variant_builder_add(&b, "v", g_variant_new_int32(value.y));
+  g_variant_builder_add(&b, "v", g_variant_new_int32(value.width));
+  g_variant_builder_add(&b, "v", g_variant_new_int32(value.height));
+
+  g_variant_builder_add(
+    builder_,
+    "{sv}",
+    name,
+    g_variant_builder_end(&b)
+  );
   return *this;
 }
 

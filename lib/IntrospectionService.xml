@@ -9,6 +9,9 @@
 			<arg type="s" name="piece" direction="in" />
 			<arg type='a(sv)' name='state' direction='out' />
 		</method>
+		<method name="GetVersion">
+			<arg type='s' name='version' direction='out' />
+		</method>
 <!-- Signals -->
 		<!-- None currently -->
 
