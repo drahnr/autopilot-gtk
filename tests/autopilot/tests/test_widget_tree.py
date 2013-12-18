@@ -64,7 +64,7 @@ class WidgetTreeTest(AutopilotTestCase):
     def test_select_single_unique(self):
         """select_single() on widget types with only one instance"""
 
-        for wtype in ('GtkMenuBar', 'GtkAboutDialog', 'GtkGrid'):
+        for wtype in ('GtkMenuBar', 'GtkAboutDialog'):
             w = self.app.select_single(wtype)
             self.assertIn('.' + wtype, str(type(w)))
 

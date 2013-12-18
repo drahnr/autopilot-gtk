@@ -127,11 +127,10 @@ GVariant* GtkNode::Introspect() const
   for (uint i = 0; i < length; ++i) {
     GParamSpec* param_spec = properties[i];
     // ATK's accessible-table-* properties generate "invalid property id" warnings
-    std::string prefix("accessible-table-");
-    if (std::string(g_param_spec_get_name(param_spec)).compare(0, prefix.length(), prefix) == 0)
+    if (g_str_has_prefix(g_param_spec_get_name(param_spec), "accessible-table-"))
       continue;
     // see Launchpad bug #1108155: GtkTreePath mis-casts while copying, actuates here in "root" property
-    if (std::string(g_type_name(param_spec->value_type)) != "GtkTreePath") {
+    if (g_strcmp0(g_type_name(param_spec->value_type), "GtkTreePath") != 0) {
       // some properties are only writeable; some toxic nodes change their names (?)
       if (param_spec->flags & G_PARAM_READABLE) {
         GValue value = G_VALUE_INIT;
@@ -139,7 +138,7 @@ GVariant* GtkNode::Introspect() const
         g_object_get_property(object_, g_param_spec_get_name(param_spec), &value);
         convert_value(param_spec, &value);
         builder_wrapper.add_gvalue(param_spec->name, &value);
-        g_value_unset(&value); //Free the memory accquired by the value object. Absence of this was causig the applications to crash.
+        g_value_unset(&value); //Free the memory acquired by the value object. Absence of this was causig the applications to crash.
       }
     } else {
       //g_debug("skipped %s of type GtkTreePath", g_param_spec_get_name(param_spec));
@@ -267,8 +266,8 @@ xpathselect::Node::Ptr GtkNode::GetParent() const
 bool GtkNode::MatchStringProperty(const std::string& name,
                                   const std::string& value) const {
   if (name == "BuilderName" && GTK_IS_BUILDABLE(object_)) {
-      const gchar* name = gtk_buildable_get_name(GTK_BUILDABLE (object_));
-      return name != NULL && std::string(name) == value;
+      const gchar* builder_name = gtk_buildable_get_name(GTK_BUILDABLE (object_));
+      return builder_name != NULL && value.compare(builder_name) == 0;
   }
 
   GObjectClass* klass = G_OBJECT_GET_CLASS(object_);

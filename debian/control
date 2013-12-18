@@ -4,6 +4,7 @@ Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Allan LeSage <allan.lesage@canonical.com>
 Build-Depends: autopilot-desktop (>= 1.4),
                bamfdaemon,
+               at-spi2-core,
                cmake,
                dbus-x11,
                debhelper (>= 9),
@@ -24,6 +25,7 @@ Homepage: https://launchpad.net/autopilot-gtk
 # and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~autopilot/autopilot-gtk/trunk
 Vcs-Browser: https://bazaar.launchpad.net/~autopilot/autopilot-gtk/trunk/files
+XS-Testsuite: autopkgtest
 
 Package: libautopilot-gtk
 Section: libs

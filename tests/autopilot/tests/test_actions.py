@@ -67,9 +67,7 @@ class ActionsTest(AutopilotTestCase):
         self.keyboard.press_and_release('Enter')
 
         # should get the greeting dialog
-        self.assertThat(lambda: self.app.select_single('GtkMessageDialog', visible=True),
-                        Eventually(NotEquals(None)))
-        md = self.app.select_single('GtkMessageDialog')
+        md = self.app.wait_select_single('GtkMessageDialog', visible=True)
 
         # we expect the message dialog to show the corresponding greeting
         self.assertNotEqual(md.select_single('GtkLabel',
@@ -115,9 +113,7 @@ class ActionsTest(AutopilotTestCase):
         self.mouse.click_object(btn)
 
         # should get the greeting dialog
-        self.assertThat(lambda: self.app.select_single('GtkMessageDialog', visible=True),
-                        Eventually(NotEquals(None)))
-        md = self.app.select_single('GtkMessageDialog')
+        md = self.app.wait_select_single('GtkMessageDialog', visible=True)
 
         # we expect the message dialog to show the corresponding greeting
         self.assertNotEqual(md.select_single('GtkLabel',
@@ -125,7 +121,7 @@ class ActionsTest(AutopilotTestCase):
                             None)
 
         # close the dialog
-        btn = md.select_single('GtkButton', label='gtk-close')
+        btn = md.select_single('GtkButton')
         self.mouse.click_object(btn)
         self.assertThat(
             lambda: self.app.select_single('GtkMessageDialog', visible=True),
@@ -171,13 +167,7 @@ class ActionsTest(AutopilotTestCase):
 
         # after opening, submenus should become visible
         self.mouse.click_object(file_menu)
-        # FIXME: getting a reference to this object once and then just querying
-        # it doesn't work
-        self.assertThat(lambda: hasattr(self.app.select_single('GtkImageMenuItem',
-                                                               label='gtk-open'),
-                                        'globalRect'),
-                        Eventually(Equals(True)))
-        m = self.app.select_single('GtkImageMenuItem', label='gtk-open')
+        m = self.app.wait_select_single('GtkImageMenuItem', label='gtk-open', visible=True)
         self.assertGreaterEqual(m.globalRect[0], 0)
         self.assertGreaterEqual(m.globalRect[1], 0)
         self.assertGreater(m.globalRect[2], 0)

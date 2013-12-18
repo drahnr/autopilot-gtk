@@ -1,3 +1,18 @@
+autopilot-gtk (1.4+14.04.20131218-0ubuntu1) trusty; urgency=low
+
+  [ Martin Pitt ]
+  * Fix tests for GTK 3.10.
+  * Avoid unnecessary, inefficient, and crash-prone temporary
+    std::strings. (LP: #1261685)
+  * Respect DEB_BUILD_OPTIONS=nocheck. Add autopkgtest. Add missing at-
+    spi2-core test dependency (caused tests to run 20 min instead of 40
+    s).
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 66
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 18 Dec 2013 18:40:27 +0000
+
 autopilot-gtk (1.4+14.04.20131128.1-0ubuntu1) trusty; urgency=low
 
   [ Martin Pitt ]

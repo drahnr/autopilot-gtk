@@ -7,10 +7,12 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 	dh $@ 
 
 override_dh_auto_test:
+ifeq (, $(findstring nocheck, $(DEB_BUILD_OPTIONS)))
 	mkdir -p debian/tmp/home/run
 	env HOME=$(CURDIR)/debian/tmp/home XDG_RUNTIME_DIR=$(CURDIR)/debian/tmp/home/run \
 		xvfb-run -a -e $(CURDIR)/debian/tmp/X.log dh_auto_test || \
 	        { echo "==== X.org log ===="; cat $(CURDIR)/debian/tmp/X.log; false; }
+endif
 
 override_dh_install:
 	dh_install --fail-missing

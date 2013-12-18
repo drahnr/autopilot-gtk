@@ -1,0 +1,11 @@
+Tests: autopilot
+Depends: @,
+         autopilot-desktop (>= 1.4),
+         bamfdaemon,
+         at-spi2-core,
+         xvfb,
+         dbus-x11,
+         gnome-system-log,
+         gsettings-desktop-schemas,
+         python-gi,
+         gir1.2-gtk-3.0
