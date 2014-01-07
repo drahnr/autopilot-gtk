@@ -1,3 +1,16 @@
+autopilot-gtk (1.4+14.04.20140107-0ubuntu1) trusty; urgency=low
+
+  [ Martin Pitt ]
+  * Tone down "unsupported type" warning into a debug message. (LP:
+    #1250452)
+  * Add stress test case for querying lots of properties in a tight
+    loop. (LP: #1266689)
+
+  [ Ubuntu daily release ]
+  * Automatic snapshot from revision 70
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Tue, 07 Jan 2014 22:47:25 +0000
+
 autopilot-gtk (1.4+14.04.20131218-0ubuntu2) trusty; urgency=medium
 
   * No-change rebuild against trusty's xpathselect. The previous auto-upload

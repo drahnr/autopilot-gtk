@@ -329,7 +329,7 @@ BuilderWrapper& BuilderWrapper::add_gvalue(char const* name, GValue* value)
     }
     break;
   default:
-    g_warning("unsupported type: %s", g_type_name(G_VALUE_TYPE(value)));
+    g_debug("unsupported type: %s", g_type_name(G_VALUE_TYPE(value)));
     {}
     break;
   }

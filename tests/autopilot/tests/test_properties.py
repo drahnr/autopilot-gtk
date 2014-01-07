@@ -136,3 +136,13 @@ class PropertyTest(AutopilotTestCase):
         # select by buffer contents
         w = self.app.select_single(buffer='This is a test application.')
         self.assertEqual(w.BuilderName, 'textview_demo')
+
+    def test_stress(self):
+        """Query lots widgets in a tight loop"""
+
+        for i in range(300):
+            w = self.app.select_single(BuilderName='button_greet')
+            self.assertEqual(w.label, 'Greet')
+
+            w = self.app.select_single('GtkButton', label='gtk-quit')
+            self.assertEqual(w.use_stock, True)
