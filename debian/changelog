@@ -1,3 +1,11 @@
+autopilot-gtk (1.4+14.04.20140107-0ubuntu2) trusty; urgency=medium
+
+  * No-change rebuild against trusty's xpathselect. The previous auto-upload
+    was built against the PPA's xpathselect which isn't in trusty yet, making
+    this uninstallable.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Wed, 08 Jan 2014 07:30:56 +0100
+
 autopilot-gtk (1.4+14.04.20140107-0ubuntu1) trusty; urgency=low
 
   [ Martin Pitt ]
