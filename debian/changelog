@@ -1,3 +1,9 @@
+autopilot-gtk (1.4+14.04.20140107-0ubuntu3) utopic; urgency=medium
+
+  * Add legacy & icon dependencies for ADT tests.
+
+ -- Dimitri John Ledkov <xnox@ubuntu.com>  Mon, 19 May 2014 12:32:52 +0100
+
 autopilot-gtk (1.4+14.04.20140107-0ubuntu2) trusty; urgency=medium
 
   * No-change rebuild against trusty's xpathselect. The previous auto-upload
