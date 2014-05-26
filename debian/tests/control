@@ -1,13 +1,12 @@
 Tests: autopilot
 Depends: @,
-         autopilot-desktop (>= 1.4),
          autopilot-desktop-legacy (>= 1.4),
-         gnome-icon-theme-symbolic,
          bamfdaemon,
          at-spi2-core,
          xvfb,
          dbus-x11,
-         gnome-system-log,
+         gnome-calculator,
          gsettings-desktop-schemas,
+         gnome-icon-theme-symbolic,
          python-gi,
          gir1.2-gtk-3.0
