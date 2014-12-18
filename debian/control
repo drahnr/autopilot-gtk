@@ -18,6 +18,7 @@ Build-Depends: autopilot-desktop-legacy (>= 1.4),
                python-evdev,
                python-gi,
                xvfb,
+               light-themes
 Standards-Version: 3.9.4
 Section: libs
 Homepage: https://launchpad.net/autopilot-gtk

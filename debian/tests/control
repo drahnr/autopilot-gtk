@@ -9,4 +9,5 @@ Depends: @,
          gsettings-desktop-schemas,
          gnome-icon-theme-symbolic,
          python-gi,
-         gir1.2-gtk-3.0
+         gir1.2-gtk-3.0,
+         light-themes
